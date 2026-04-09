@@ -6,7 +6,8 @@ SHARED_DIR="/shared"
 REQUEST_FILE="${SHARED_DIR}/update-request"
 STATUS_FILE="${SHARED_DIR}/update-status"
 LOG_FILE="${SHARED_DIR}/update-log"
-COMPOSE_FILE="/opt/project-nomad/compose.yml"
+# NOMAD_COMPOSE_FILE is set by the compose environment; falls back to default for backwards compat
+COMPOSE_FILE="${NOMAD_COMPOSE_FILE:-/opt/project-nomad/compose.yml}"
 COMPOSE_PROJECT_NAME="project-nomad"
 
 log() {

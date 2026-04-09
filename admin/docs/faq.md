@@ -237,21 +237,21 @@ The system is designed to recover gracefully. If an update fails:
 
 ### Command-Line Maintenance
 
-For advanced troubleshooting or when you can't access the web interface, N.O.M.A.D. includes helper scripts in `/opt/project-nomad`:
+For advanced troubleshooting or when you can't access the web interface, N.O.M.A.D. includes helper scripts in your install directory (check `/etc/project-nomad.conf` for the path, default is `/opt/project-nomad`):
 
 **Start all services:**
 ```bash
-sudo bash /opt/project-nomad/start_nomad.sh
+source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/start_nomad.sh"
 ```
 
 **Stop all services:**
 ```bash
-sudo bash /opt/project-nomad/stop_nomad.sh
+source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/stop_nomad.sh"
 ```
 
 **Update Command Center:**
 ```bash
-sudo bash /opt/project-nomad/update_nomad.sh
+source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/update_nomad.sh"
 ```
 *Note: This updates the Command Center only, not individual apps. Update apps through the web interface.*
 

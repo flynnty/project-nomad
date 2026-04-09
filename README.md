@@ -130,25 +130,25 @@ Contributions are welcome and appreciated! Please see [CONTRIBUTING.md](CONTRIBU
 Project N.O.M.A.D. is licensed under the [Apache License 2.0](LICENSE).
 
 ## Helper Scripts
-Once installed, Project N.O.M.A.D. has a few helper scripts should you ever need to troubleshoot issues or perform maintenance that can't be done through the Command Center. All of these scripts are found in Project N.O.M.A.D.'s install directory, `/opt/project-nomad`
+Once installed, Project N.O.M.A.D. has a few helper scripts should you ever need to troubleshoot issues or perform maintenance that can't be done through the Command Center. All of these scripts are found in Project N.O.M.A.D.'s install directory (default: `/opt/project-nomad`, or the custom path you chose during installation — check `/etc/project-nomad.conf`).
 
 ###
 
 ###### Start Script - Starts all installed project containers
 ```bash
-sudo bash /opt/project-nomad/start_nomad.sh
+source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/start_nomad.sh"
 ```
 ###
 
 ###### Stop Script - Stops all installed project containers
 ```bash
-sudo bash /opt/project-nomad/stop_nomad.sh
+source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/stop_nomad.sh"
 ```
 ###
 
 ###### Update Script - Attempts to pull the latest images for the Command Center and its dependencies (i.e. mysql) and recreate the containers. Note: this *only* updates the Command Center containers. It does not update the installable application containers - that should be done through the Command Center UI
 ```bash
-sudo bash /opt/project-nomad/update_nomad.sh
+source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/update_nomad.sh"
 ```
 
 ###### Uninstall Script - Need to start fresh? Use the uninstall script to make your life easy. Note: this cannot be undone!
