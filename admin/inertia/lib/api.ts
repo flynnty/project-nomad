@@ -786,6 +786,60 @@ class API {
       return response.data
     })()
   }
+
+  // YouTube content methods
+
+  async downloadYoutubeContent(url: string) {
+    return catchInternal(async () => {
+      const response = await this.client.post<{ message: string; jobId: string; url: string }>(
+        '/youtube/download',
+        { url }
+      )
+      return response.data
+    })()
+  }
+
+  async listYoutubeFiles() {
+    return catchInternal(async () => {
+      const response = await this.client.get<{ files: { name: string; key: string; type: string }[] }>(
+        '/youtube/list'
+      )
+      return response.data
+    })()
+  }
+
+  async listYoutubeJobs() {
+    return catchInternal(async () => {
+      const response = await this.client.get<
+        {
+          jobId: string
+          url: string
+          percent: number
+          message: string
+          lastProgressTime?: number
+          status: 'waiting' | 'active' | 'delayed' | 'failed'
+          failedReason?: string
+        }[]
+      >('/youtube/jobs')
+      return response.data
+    })()
+  }
+
+  async cancelYoutubeJob(jobId: string) {
+    return catchInternal(async () => {
+      const response = await this.client.post<{ success: boolean; message: string }>(
+        `/youtube/jobs/${jobId}/cancel`
+      )
+      return response.data
+    })()
+  }
+
+  async deleteYoutubeFile(filename: string) {
+    return catchInternal(async () => {
+      const response = await this.client.delete<{ message: string }>(`/youtube/${filename}`)
+      return response.data
+    })()
+  }
 }
 
 export default new API()

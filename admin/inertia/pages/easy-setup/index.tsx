@@ -11,7 +11,7 @@ import TierSelectionModal from '~/components/TierSelectionModal'
 import WikipediaSelector from '~/components/WikipediaSelector'
 import LoadingSpinner from '~/components/LoadingSpinner'
 import Alert from '~/components/Alert'
-import { IconCheck, IconChevronDown, IconChevronUp, IconCpu, IconBooks } from '@tabler/icons-react'
+import { IconCheck, IconChevronDown, IconChevronUp, IconCpu, IconBooks, IconBrandYoutube } from '@tabler/icons-react'
 import StorageProjectionBar from '~/components/StorageProjectionBar'
 import { useNotifications } from '~/context/NotificationContext'
 import useInternetStatus from '~/hooks/useInternetStatus'
@@ -137,6 +137,11 @@ export default function EasySetupWizard(props: {
 
   // Wikipedia selection state
   const [selectedWikipedia, setSelectedWikipedia] = useState<string | null>(null)
+
+  // YouTube content state
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [youtubeUrlError, setYoutubeUrlError] = useState<string | null>(null)
+  const [youtubeQueued, setYoutubeQueued] = useState<string[]>([])
 
   const { addNotification } = useNotifications()
   const { isOnline } = useInternetStatus()
@@ -376,6 +381,11 @@ export default function EasySetupWizard(props: {
       // Select Wikipedia option if one was chosen
       if (selectedWikipedia && selectedWikipedia !== wikipediaState?.currentSelection?.optionId) {
         await api.selectWikipedia(selectedWikipedia)
+      }
+
+      // Kick off any YouTube downloads that were queued (fire-and-forget, don't block)
+      for (const ytUrl of youtubeQueued) {
+        api.downloadYoutubeContent(ytUrl).catch(() => {})
       }
 
       addNotification({
@@ -997,6 +1007,65 @@ export default function EasySetupWizard(props: {
             ) : null}
 
           </>
+        )}
+
+        {/* YouTube Content — Optional */}
+        {isInformationSelected && (
+          <div className="border-t border-desert-stone-light pt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-surface-primary border border-border-subtle flex items-center justify-center shadow-sm">
+                <IconBrandYoutube className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-text-primary">YouTube Content <span className="text-sm font-normal text-text-muted">(Optional)</span></h3>
+                <p className="text-sm text-text-muted">Download a YouTube video or channel for offline viewing in your Information Library</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={youtubeUrl}
+                onChange={(e) => { setYoutubeUrl(e.target.value); setYoutubeUrlError(null) }}
+                placeholder="https://www.youtube.com/watch?v=... or @ChannelName"
+                disabled={!isOnline}
+                className="flex-1 px-3 py-2 text-sm border border-desert-stone-light rounded-md bg-surface-secondary text-text-primary focus:outline-none focus:ring-1 focus:ring-desert-green disabled:opacity-50"
+              />
+              <StyledButton
+                type="button"
+                variant="secondary"
+                disabled={!isOnline || !youtubeUrl.trim()}
+                onClick={() => {
+                  const trimmed = youtubeUrl.trim()
+                  if (!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmed)) {
+                    setYoutubeUrlError('Enter a valid youtube.com or youtu.be URL.')
+                    return
+                  }
+                  if (!youtubeQueued.includes(trimmed)) {
+                    setYoutubeQueued((prev) => [...prev, trimmed])
+                  }
+                  setYoutubeUrl('')
+                  setYoutubeUrlError(null)
+                }}
+              >
+                Add
+              </StyledButton>
+            </div>
+            {youtubeUrlError && <p className="mt-1 text-xs text-red-600">{youtubeUrlError}</p>}
+            {youtubeQueued.length > 0 && (
+              <ul className="mt-3 space-y-1">
+                {youtubeQueued.map((u) => (
+                  <li key={u} className="flex items-center gap-2 text-sm">
+                    <IconCheck size={14} className="text-desert-green shrink-0" />
+                    <span className="truncate text-text-secondary">{u}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2 text-xs text-text-muted">
+              Downloads happen in the background and appear in your Information Library once complete. You can manage YouTube content anytime from the{' '}
+              <a href="/youtube" className="text-desert-green hover:underline">YouTube Library</a>.
+            </p>
+          </div>
         )}
 
         {/* Show message if no capabilities requiring content are selected */}

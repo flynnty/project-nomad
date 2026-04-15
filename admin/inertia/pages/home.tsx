@@ -1,5 +1,6 @@
 import {
   IconBolt,
+  IconBrandYoutube,
   IconHelp,
   IconMapRoute,
   IconPlus,
@@ -25,6 +26,18 @@ const MAPS_ITEM = {
   icon: <IconMapRoute size={48} />,
   installed: true,
   displayOrder: 4,
+  poweredBy: null,
+}
+
+// YouTube Library (display_order: 5)
+const YOUTUBE_ITEM = {
+  label: 'YouTube Library',
+  to: '/youtube',
+  target: '',
+  description: 'Download YouTube videos and channels for offline viewing',
+  icon: <IconBrandYoutube size={48} />,
+  installed: true,
+  displayOrder: 5,
   poweredBy: null,
 }
 
@@ -124,6 +137,9 @@ export default function Home(props: {
 
   // Add Maps as a Core Capability
   items.push(MAPS_ITEM)
+
+  // Add YouTube Library
+  items.push(YOUTUBE_ITEM)
 
   // Add system items
   items.push(...SYSTEM_ITEMS)
