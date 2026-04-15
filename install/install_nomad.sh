@@ -194,11 +194,6 @@ prompt_install_location() {
   echo -e "${GREEN}#${RESET} Installation directory set to: $NOMAD_DIR\\n"
 }
 
-save_install_config() {
-  echo -e "${YELLOW}#${RESET} Saving installation config to /etc/project-nomad.conf...\\n"
-  echo "NOMAD_DIR=\"${NOMAD_DIR}\"" | sudo tee /etc/project-nomad.conf > /dev/null
-  echo -e "${GREEN}#${RESET} Installation config saved.\\n"
-}
 
 ensure_docker_installed() {
   if ! command -v docker &> /dev/null; then
@@ -611,7 +606,6 @@ check_is_debug_mode
 get_install_confirmation
 accept_terms
 prompt_install_location
-save_install_config
 ensure_docker_installed
 check_docker_compose
 setup_nvidia_container_toolkit

@@ -40,11 +40,9 @@ WHITE_R='\033[39m'
 # Constants
 ###############################################################################
 
-# Load install location from config saved by installer, fallback to default
-if [[ -f /etc/project-nomad.conf ]]; then
-  source /etc/project-nomad.conf
-fi
-NOMAD_DIR="${NOMAD_DIR:-/opt/project-nomad}"
+# The helper scripts live inside NOMAD_DIR, so derive the install path from this script's location.
+# This keeps the install fully portable across machines.
+NOMAD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="${NOMAD_DIR}/compose.yml"
 SIDECAR_DIR="${NOMAD_DIR}/sidecar-updater"
 COMPOSE_PROJECT_NAME="project-nomad"

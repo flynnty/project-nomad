@@ -1,6 +1,12 @@
 name: Build Sidecar Updater Image
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'install/sidecar-updater/**'
+      - '.github/workflows/build-sidecar-updater.yml'
   workflow_dispatch:
     inputs:
       version:
@@ -14,19 +20,8 @@ on:
         default: false
 
 jobs:
-  check_authorization:
-    name: Check authorization to publish new Docker image
-    runs-on: ubuntu-latest
-    outputs:
-      isAuthorized: ${{ steps.check-auth.outputs.is_authorized }}
-    steps:
-      - name: check-auth
-        id: check-auth
-        run: echo "is_authorized=${{ contains(secrets.DEPLOYMENT_AUTHORIZED_USERS, github.triggering_actor) }}" >> $GITHUB_OUTPUT
   build:
     name: Build sidecar-updater image
-    needs: check_authorization
-    if: needs.check_authorization.outputs.isAuthorized == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,6 +41,6 @@ jobs:
           context: install/sidecar-updater
           push: true
           tags: |
-            ghcr.io/flynnty/project-nomad-sidecar-updater:${{ inputs.version }}
-            ghcr.io/flynnty/project-nomad-sidecar-updater:v${{ inputs.version }}
-            ${{ inputs.tag_latest && 'ghcr.io/flynnty/project-nomad-sidecar-updater:latest' || '' }}
+            ghcr.io/flynnty/project-nomad-sidecar-updater:latest
+            ${{ inputs.version && format('ghcr.io/flynnty/project-nomad-sidecar-updater:{0}', inputs.version) || '' }}
+            ${{ inputs.version && format('ghcr.io/flynnty/project-nomad-sidecar-updater:v{0}', inputs.version) || '' }}

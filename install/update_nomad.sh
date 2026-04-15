@@ -22,11 +22,13 @@ GRAY_R='\033[39m'
 RED='\033[1;31m' # Light Red.
 GREEN='\033[1;32m' # Light Green.
 
-# Load install location from config saved by installer, fallback to default
-if [[ -f /etc/project-nomad.conf ]]; then
-  source /etc/project-nomad.conf
-fi
-NOMAD_DIR="${NOMAD_DIR:-/opt/project-nomad}"
+# The helper scripts live inside NOMAD_DIR, so derive the install path from this script's location.
+# This keeps the install fully portable across machines.
+NOMAD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Refresh the .env so Docker Compose volume paths are correct for this machine.
+# This is important when the HDD is moved to a new machine and mounts at a different path.
+echo "NOMAD_DIR=${NOMAD_DIR}" > "${NOMAD_DIR}/.env"
 
 ###################################################################################################################################################################################################
 #                                                                                                                                                                                                 #
@@ -86,17 +88,27 @@ get_update_confirmation(){
 
 ensure_docker_installed_and_running() {
   if ! command -v docker &> /dev/null; then
-    echo -e "${RED}#${RESET} Docker is not installed. This is unexpected, as Project N.O.M.A.D. requires Docker to run. Did you mean to use the install script instead of the update script?"
-    exit 1
+    echo -e "${YELLOW}#${RESET} Docker is not installed. Installing Docker...\\n"
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    sudo sh /tmp/get-docker.sh
+    rm -f /tmp/get-docker.sh
+    if ! command -v docker &> /dev/null; then
+      echo -e "${RED}#${RESET} Docker installation failed. Please install Docker manually and try again."
+      exit 1
+    fi
+    echo -e "${GREEN}#${RESET} Docker installed successfully.\\n"
+  else
+    echo -e "${GREEN}#${RESET} Docker is already installed.\\n"
   fi
 
   if ! systemctl is-active --quiet docker; then
-    echo -e "${RED}#${RESET} Docker is not running. Attempting to start Docker..."
+    echo -e "${YELLOW}#${RESET} Docker is not running. Attempting to start Docker...\\n"
     sudo systemctl start docker
     if ! systemctl is-active --quiet docker; then
       echo -e "${RED}#${RESET} Failed to start Docker. Please start Docker and try again."
       exit 1
     fi
+    echo -e "${GREEN}#${RESET} Docker started successfully.\\n"
   fi
 }
 

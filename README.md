@@ -34,6 +34,22 @@ Project N.O.M.A.D. is now installed on your device! Open a browser and navigate 
 
 For a complete step-by-step walkthrough (including Ubuntu installation), see the [Installation Guide](https://www.projectnomad.us/install).
 
+### Portable Installation (External Drive)
+Project N.O.M.A.D. can be installed directly to an external drive and moved between machines without reinstalling. During installation, choose your external drive as the install path (e.g. `/media/user/MyDrive/project-nomad`). All data, configuration, and helper scripts are stored on the drive itself.
+
+**First time on a new machine** — plug in the drive, then run the update script. It will install Docker if needed and start all containers:
+```bash
+sudo bash /media/<user>/<drive>/project-nomad/update_nomad.sh
+```
+Once running, open a browser and navigate to `http://localhost:8080` (or `http://DEVICE_IP:8080`).
+
+**Returning to a machine you've used before** — Docker and the containers are already set up. Just plug in the drive and start:
+```bash
+sudo bash /media/<user>/<drive>/project-nomad/start_nomad.sh
+```
+
+> **Tip:** To find where your drive mounted, run `lsblk -o NAME,MOUNTPOINT` or check `/media/<your-username>/` after plugging it in.
+
 ### Advanced Installation
 For more control over the installation process, copy and paste the [Docker Compose template](https://raw.githubusercontent.com/flynnty/project-nomad/refs/heads/main/install/management_compose.yaml) into a `docker-compose.yml` file and customize it to your liking (be sure to replace any placeholders with your actual values). Then, run `docker compose up -d` to start the Command Center and its dependencies. Note: this method is recommended for advanced users only, as it requires familiarity with Docker and manual configuration before starting.
 
@@ -130,25 +146,25 @@ Contributions are welcome and appreciated! Please see [CONTRIBUTING.md](CONTRIBU
 Project N.O.M.A.D. is licensed under the [Apache License 2.0](LICENSE).
 
 ## Helper Scripts
-Once installed, Project N.O.M.A.D. has a few helper scripts should you ever need to troubleshoot issues or perform maintenance that can't be done through the Command Center. All of these scripts are found in Project N.O.M.A.D.'s install directory (default: `/opt/project-nomad`, or the custom path you chose during installation — check `/etc/project-nomad.conf`).
+Once installed, Project N.O.M.A.D. has a few helper scripts should you ever need to troubleshoot issues or perform maintenance that can't be done through the Command Center. All of these scripts are found directly in your install directory (the path you chose during installation, e.g. `/opt/project-nomad` or `/media/user/MyDrive/project-nomad`).
 
 ###
 
 ###### Start Script - Starts all installed project containers
 ```bash
-source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/start_nomad.sh"
+sudo bash /your/install/path/start_nomad.sh
 ```
 ###
 
 ###### Stop Script - Stops all installed project containers
 ```bash
-source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/stop_nomad.sh"
+sudo bash /your/install/path/stop_nomad.sh
 ```
 ###
 
 ###### Update Script - Attempts to pull the latest images for the Command Center and its dependencies (i.e. mysql) and recreate the containers. Note: this *only* updates the Command Center containers. It does not update the installable application containers - that should be done through the Command Center UI
 ```bash
-source /etc/project-nomad.conf && sudo bash "${NOMAD_DIR}/update_nomad.sh"
+sudo bash /your/install/path/update_nomad.sh
 ```
 
 ###### Uninstall Script - Need to start fresh? Use the uninstall script to make your life easy. Note: this cannot be undone!

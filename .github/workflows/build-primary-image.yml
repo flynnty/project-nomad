@@ -1,6 +1,15 @@
 name: Build Primary Docker Image
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'admin/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/build-primary-image.yml'
   workflow_dispatch:
     inputs:
       version:
@@ -14,19 +23,8 @@ on:
         default: false
 
 jobs:
-  check_authorization:
-    name: Check authorization to publish new Docker image
-    runs-on: ubuntu-latest
-    outputs:
-      isAuthorized: ${{ steps.check-auth.outputs.is_authorized }}
-    steps:
-      - name: check-auth
-        id: check-auth
-        run: echo "is_authorized=${{ contains(secrets.DEPLOYMENT_AUTHORIZED_USERS, github.triggering_actor) }}" >> $GITHUB_OUTPUT      
   build:
     name: Build Docker image
-    needs: check_authorization
-    if: needs.check_authorization.outputs.isAuthorized == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,9 +43,9 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/flynnty/project-nomad:${{ inputs.version }}
-            ghcr.io/flynnty/project-nomad:v${{ inputs.version }}
-            ${{ inputs.tag_latest && 'ghcr.io/flynnty/project-nomad:latest' || '' }}
+            ghcr.io/flynnty/project-nomad:latest
+            ${{ inputs.version && format('ghcr.io/flynnty/project-nomad:{0}', inputs.version) || '' }}
+            ${{ inputs.version && format('ghcr.io/flynnty/project-nomad:v{0}', inputs.version) || '' }}
           build-args: |
             VERSION=${{ inputs.version }}
             BUILD_DATE=${{ github.event.workflow_run.created_at }}
