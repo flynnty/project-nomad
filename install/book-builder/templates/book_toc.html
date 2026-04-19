@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ book_title }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #e0e0e0; }
+    .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+    .book-header { display: flex; gap: 24px; margin-bottom: 32px; }
+    .cover img { width: 120px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    .cover-placeholder { width: 120px; height: 180px; background: #1a1a2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .meta { flex: 1; }
+    .meta h1 { font-size: 22px; line-height: 1.3; margin-bottom: 6px; }
+    .meta .author { color: #aaa; font-size: 15px; margin-bottom: 12px; }
+    .meta .description { font-size: 14px; color: #ccc; line-height: 1.6; }
+    .toc-header { font-size: 16px; font-weight: bold; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #303030; }
+    .chapter-list { list-style: none; }
+    .chapter-list li { border-bottom: 1px solid #222; }
+    .chapter-list a { display: block; padding: 10px 4px; color: #e0e0e0; text-decoration: none; font-size: 14px; }
+    .chapter-list a:hover { color: #fff; background: #1a1a1a; padding-left: 8px; }
+    .chapter-num { color: #666; margin-right: 8px; font-size: 12px; }
+    .read-btn { display: inline-block; margin-bottom: 24px; background: #2d6a4f; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: bold; }
+    .read-btn:hover { background: #3a7a5f; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="book-header">
+      <div class="cover">
+        {% if cover_path %}
+        <img src="{{ cover_path }}" alt="{{ book_title }}" />
+        {% else %}
+        <div class="cover-placeholder">📖</div>
+        {% endif %}
+      </div>
+      <div class="meta">
+        <h1>{{ book_title }}</h1>
+        <div class="author">{{ author }}</div>
+        {% if description %}
+        <div class="description">{{ description[:300] }}{% if description|length > 300 %}…{% endif %}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if chapters %}
+    <a class="read-btn" href="chapter/0.html">▶ Start Reading</a>
+
+    <div class="toc-header">Contents ({{ chapters|length }} chapters)</div>
+    <ul class="chapter-list">
+      {% for ch in chapters %}
+      <li>
+        <a href="chapter/{{ ch.index }}.html">
+          <span class="chapter-num">{{ ch.index + 1 }}</span>{{ ch.title }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="color:#aaa">No chapters found in this book.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import {
+  IconBook,
   IconBolt,
   IconBrandYoutube,
   IconHelp,
@@ -38,6 +39,18 @@ const YOUTUBE_ITEM = {
   icon: <IconBrandYoutube size={48} />,
   installed: true,
   displayOrder: 5,
+  poweredBy: null,
+}
+
+// My Library (display_order: 6)
+const BOOKS_ITEM = {
+  label: 'My Library',
+  to: '/books',
+  target: '',
+  description: 'Upload epub and PDF books for offline reading',
+  icon: <IconBook size={48} />,
+  installed: true,
+  displayOrder: 6,
   poweredBy: null,
 }
 
@@ -140,6 +153,9 @@ export default function Home(props: {
 
   // Add YouTube Library
   items.push(YOUTUBE_ITEM)
+
+  // Add My Library
+  items.push(BOOKS_ITEM)
 
   // Add system items
   items.push(...SYSTEM_ITEMS)

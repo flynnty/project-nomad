@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Book Library</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #e0e0e0; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #303030; }
+    .header h1 { font-size: 24px; margin-bottom: 4px; }
+    .header p { color: #aaa; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+    .card { background: #212121; border-radius: 8px; overflow: hidden; text-decoration: none; color: inherit; display: block; }
+    .card:hover { background: #2a2a2a; }
+    .cover-wrap { position: relative; padding-top: 150%; background: #1a1a2e; overflow: hidden; }
+    .cover-wrap img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+    .cover-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 12px; text-align: center; }
+    .cover-placeholder span { font-size: 32px; }
+    .cover-placeholder small { font-size: 11px; color: #aaa; line-height: 1.4; word-break: break-word; }
+    .pdf-badge { position: absolute; top: 8px; right: 8px; background: #c0392b; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 3px; }
+    .card-body { padding: 10px; }
+    .card-title { font-size: 13px; font-weight: bold; line-height: 1.4; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-author { color: #aaa; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .empty { text-align: center; color: #aaa; padding: 64px 24px; font-size: 16px; }
+    .empty p { margin-top: 8px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📚 My Book Library</h1>
+      <p>{{ books|length }} book{{ 's' if books|length != 1 else '' }}</p>
+    </div>
+
+    {% if books %}
+    <div class="grid">
+      {% for book in books %}
+      <a class="card" href="book/{{ book.id }}/index.html">
+        <div class="cover-wrap">
+          {% if book.cover_path %}
+          <img src="{{ book.cover_path }}" alt="{{ book.title }}" loading="lazy" />
+          {% else %}
+          <div class="cover-placeholder">
+            <span>📖</span>
+            <small>{{ book.title }}</small>
+          </div>
+          {% endif %}
+          {% if book.is_pdf %}
+          <span class="pdf-badge">PDF</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="card-title">{{ book.title }}</div>
+          <div class="card-author">{{ book.author }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      <div style="font-size:48px;margin-bottom:12px">📚</div>
+      No books in your library yet.
+      <p>Upload epub or PDF files through the admin to get started.</p>
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>

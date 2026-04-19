@@ -9,6 +9,7 @@ import { EmbedFileJob } from '#jobs/embed_file_job'
 import { CheckUpdateJob } from '#jobs/check_update_job'
 import { CheckServiceUpdatesJob } from '#jobs/check_service_updates_job'
 import { YoutubeZimJob } from '#jobs/youtube_zim_job'
+import { BookLibraryJob } from '#jobs/book_library_job'
 
 export default class QueueWork extends BaseCommand {
   static commandName = 'queue:work'
@@ -133,6 +134,7 @@ export default class QueueWork extends BaseCommand {
     handlers.set(CheckUpdateJob.key, new CheckUpdateJob())
     handlers.set(CheckServiceUpdatesJob.key, new CheckServiceUpdatesJob())
     handlers.set(YoutubeZimJob.key, new YoutubeZimJob())
+    handlers.set(BookLibraryJob.key, new BookLibraryJob())
 
     queues.set(RunDownloadJob.key, RunDownloadJob.queue)
     queues.set(DownloadModelJob.key, DownloadModelJob.queue)
@@ -141,6 +143,7 @@ export default class QueueWork extends BaseCommand {
     queues.set(CheckUpdateJob.key, CheckUpdateJob.queue)
     queues.set(CheckServiceUpdatesJob.key, CheckServiceUpdatesJob.queue)
     queues.set(YoutubeZimJob.key, YoutubeZimJob.queue)
+    queues.set(BookLibraryJob.key, BookLibraryJob.queue)
 
     return [handlers, queues]
   }
@@ -157,6 +160,7 @@ export default class QueueWork extends BaseCommand {
       [EmbedFileJob.queue]: 2, // Lower concurrency for embedding jobs, can be resource intensive
       [CheckUpdateJob.queue]: 1, // No need to run more than one update check at a time
       [YoutubeZimJob.queue]: 1, // One YouTube ZIM build at a time (CPU/disk/network intensive)
+      [BookLibraryJob.queue]: 1, // One book library build at a time
       default: 3,
     }
 

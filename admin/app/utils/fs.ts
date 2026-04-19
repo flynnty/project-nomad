@@ -7,6 +7,7 @@ import { LSBlockDevice, NomadDiskInfoRaw } from '../../types/system.js'
 export const ZIM_STORAGE_PATH = '/storage/zim'
 export const ZIM_INDEX_PATH = '/storage/zim'
 export const KIWIX_LIBRARY_XML_PATH = '/storage/zim/kiwix-library.xml'
+export const BOOKS_RAW_PATH = '/storage/books-raw'
 
 export async function listDirectoryContents(path: string): Promise<FileEntry[]> {
   const entries = await readdir(path, { withFileTypes: true })

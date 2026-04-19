@@ -849,6 +849,53 @@ class API {
     })()
   }
 
+  // Book library methods
+
+  async uploadBook(file: File) {
+    return catchInternal(async () => {
+      const form = new FormData()
+      form.append('file', file)
+      const response = await this.client.post<{ message: string; bookId: string }>(
+        '/books/upload',
+        form,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
+      return response.data
+    })()
+  }
+
+  async listBooks() {
+    return catchInternal(async () => {
+      const response = await this.client.get<
+        { id: string; title: string; author: string; description: string; mime_type: string }[]
+      >('/books/list')
+      return response.data
+    })()
+  }
+
+  async listBookJobs() {
+    return catchInternal(async () => {
+      const response = await this.client.get<
+        {
+          jobId: string
+          percent: number
+          message: string
+          lastProgressTime?: number
+          status: 'waiting' | 'active' | 'delayed' | 'failed'
+          failedReason?: string
+        }[]
+      >('/books/jobs')
+      return response.data
+    })()
+  }
+
+  async deleteBook(id: string) {
+    return catchInternal(async () => {
+      const response = await this.client.delete<{ message: string }>(`/books/${id}`)
+      return response.data
+    })()
+  }
+
 }
 
 export default new API()

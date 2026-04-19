@@ -20,6 +20,7 @@ import SystemController from '#controllers/system_controller'
 import CollectionUpdatesController from '#controllers/collection_updates_controller'
 import ZimController from '#controllers/zim_controller'
 import YoutubeController from '#controllers/youtube_controller'
+import BookController from '#controllers/book_controller'
 import router from '@adonisjs/core/services/router'
 import transmit from '@adonisjs/transmit/services/main'
 
@@ -194,6 +195,16 @@ router
     router.delete('/:type/:id', [YoutubeController, 'delete'])
   })
   .prefix('/api/youtube')
+
+router.get('/books', [BookController, 'index'])
+router
+  .group(() => {
+    router.post('/upload', [BookController, 'upload'])
+    router.get('/list', [BookController, 'list'])
+    router.get('/jobs', [BookController, 'listJobs'])
+    router.delete('/:id', [BookController, 'delete'])
+  })
+  .prefix('/api/books')
 
 router
   .group(() => {

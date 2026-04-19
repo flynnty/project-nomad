@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ book_title }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; }
+    .header { background: #1a1a1a; border-bottom: 1px solid #303030; padding: 10px 16px; flex-shrink: 0; }
+    .header h1 { font-size: 16px; margin-bottom: 2px; }
+    .header p { font-size: 13px; color: #aaa; }
+    .viewer { flex: 1; }
+    .viewer object { width: 100%; height: 100%; display: block; }
+    .fallback { display: none; text-align: center; padding: 40px; }
+    .fallback a { color: #6ab4a0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>{{ book_title }}</h1>
+    <p>{{ author }}{% if description %} — {{ description[:120] }}{% if description|length > 120 %}…{% endif %}{% endif %}</p>
+  </div>
+  <div class="viewer">
+    <object data="source.pdf" type="application/pdf" width="100%" height="100%">
+      <div class="fallback" style="display:block">
+        <p>Your browser cannot display this PDF inline.</p>
+        <p style="margin-top:12px"><a href="source.pdf">Download {{ book_title }}</a></p>
+      </div>
+    </object>
+  </div>
+</body>
+</html>
