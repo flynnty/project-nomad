@@ -19,13 +19,15 @@ export default class BookController {
   }
 
   async upload({ request, response }: HttpContext) {
-    const file = request.file('file', {
-      extnames: ALLOWED_EXTS,
-      size: MAX_FILE_SIZE,
-    })
+    const file = request.file('file', { size: MAX_FILE_SIZE })
 
     if (!file) {
       return response.status(400).json({ message: 'No file uploaded.' })
+    }
+
+    const ext = file.clientName?.split('.').pop()?.toLowerCase() ?? ''
+    if (!ALLOWED_EXTS.includes(ext)) {
+      return response.status(422).json({ message: 'Only .epub and .pdf files are supported.' })
     }
 
     if (!file.isValid) {
@@ -33,8 +35,6 @@ export default class BookController {
         message: file.errors.map((e) => e.message).join('; '),
       })
     }
-
-    const ext = file.extname?.toLowerCase() || 'epub'
     const mimeType = ext === 'pdf' ? 'application/pdf' : 'application/epub+zip'
 
     // Strip extension and sanitize for a human-readable title seed
