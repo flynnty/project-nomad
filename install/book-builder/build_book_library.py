@@ -66,7 +66,7 @@ class HtmlItem(Item):
     def get_title(self): return self._title
     def get_mimetype(self): return 'text/html'
     def get_hints(self): return {Hint.FRONT_ARTICLE: self._is_front}
-    def get_data(self): return StringProvider(self._content)
+    def get_contentprovider(self): return StringProvider(self._content)
 
 
 class BinaryItem(Item):
@@ -81,7 +81,7 @@ class BinaryItem(Item):
     def get_title(self): return self._title
     def get_mimetype(self): return self._mimetype
     def get_hints(self): return {Hint.FRONT_ARTICLE: False}
-    def get_data(self): return StringProvider(self._data)
+    def get_contentprovider(self): return StringProvider(self._data)
 
 
 # ---------------------------------------------------------------------------
