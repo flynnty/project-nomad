@@ -28,11 +28,12 @@ export class BookService {
   constructor(private kiwixLibraryService: KiwixLibraryService) {}
 
   async list() {
-    await ensureDirectoryExists(BOOKS_RAW_PATH)
-    const bookIds = await listSubdirs(BOOKS_RAW_PATH)
+    const booksRawPath = join(process.cwd(), BOOKS_RAW_PATH)
+    await ensureDirectoryExists(booksRawPath)
+    const bookIds = await listSubdirs(booksRawPath)
     const books = await Promise.all(
       bookIds.map(async (id) => {
-        const info = await readJsonSafe(join(BOOKS_RAW_PATH, id, 'info.json'))
+        const info = await readJsonSafe(join(booksRawPath, id, 'info.json'))
         return {
           id,
           title: (info.title as string) || id,
@@ -50,7 +51,7 @@ export class BookService {
       throw new Error('invalid_id')
     }
 
-    const targetPath = join(BOOKS_RAW_PATH, id)
+    const targetPath = join(process.cwd(), BOOKS_RAW_PATH, id)
     await rm(targetPath, { recursive: true, force: true })
 
     await BookLibraryJob.dispatch()

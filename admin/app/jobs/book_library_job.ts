@@ -184,4 +184,11 @@ export class BookLibraryJob {
     ])
     return { waiting, active, delayed, failed }
   }
+
+  static async dismissJob(jobId: string) {
+    const queueService = new QueueService()
+    const queue = queueService.getQueue(this.queue)
+    const job = await queue.getJob(jobId)
+    if (job) await job.remove()
+  }
 }

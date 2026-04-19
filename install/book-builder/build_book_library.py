@@ -254,9 +254,11 @@ def build_library_zim(raw_dir: str, zim_dir: str, env: Environment):
     zim_path = os.path.join(zim_dir, 'my_book_library.zim')
     os.makedirs(zim_dir, exist_ok=True)
 
-    with Creator(zim_path) as creator:
-        creator.config_indexing(True, 'mul')
-        creator.set_mainpath('index.html')
+    creator = Creator(zim_path)
+    creator.config_indexing(True, 'mul')
+    creator.set_mainpath('index.html')
+
+    with creator:
         creator.add_metadata('Name', 'my_book_library')
         creator.add_metadata('Title', 'My Book Library')
         creator.add_metadata('Description', 'Personal book library')
@@ -366,7 +368,7 @@ def main():
     parser.add_argument('--zim-dir', required=True, dest='zim_dir')
     args = parser.parse_args()
 
-    env = Environment(FileSystemLoader('/app/templates'), autoescape=False)
+    env = Environment(loader=FileSystemLoader('/app/templates'), autoescape=False)
 
     if args.rebuild:
         build_library_zim(args.raw_dir, args.zim_dir, env)

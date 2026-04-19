@@ -42,7 +42,7 @@ export default class BookController {
     const title = rawName.replace(/[_-]+/g, ' ').trim()
 
     const bookId = randomUUID()
-    const bookDir = join(BOOKS_RAW_PATH, bookId)
+    const bookDir = join(process.cwd(), BOOKS_RAW_PATH, bookId)
     await mkdir(bookDir, { recursive: true })
 
     await file.move(bookDir, { name: `source.${ext}` })
@@ -75,6 +75,12 @@ export default class BookController {
 
   async listJobs() {
     return this.bookService.listJobs()
+  }
+
+  async dismissJob({ response, params }: HttpContext) {
+    const id = params.id as string
+    await BookLibraryJob.dismissJob(id)
+    return response.status(204).send('')
   }
 
   async delete({ response, params }: HttpContext) {

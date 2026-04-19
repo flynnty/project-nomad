@@ -896,6 +896,12 @@ class API {
     })()
   }
 
+  async dismissBookJob(jobId: string) {
+    return catchInternal(async () => {
+      await this.client.delete(`/books/jobs/${jobId}`)
+    })()
+  }
+
 }
 
 export default new API()

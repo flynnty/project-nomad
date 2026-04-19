@@ -202,6 +202,7 @@ router
     router.post('/upload', [BookController, 'upload'])
     router.get('/list', [BookController, 'list'])
     router.get('/jobs', [BookController, 'listJobs'])
+    router.delete('/jobs/:id', [BookController, 'dismissJob'])
     router.delete('/:id', [BookController, 'delete'])
   })
   .prefix('/api/books')

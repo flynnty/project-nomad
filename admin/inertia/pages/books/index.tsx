@@ -236,7 +236,14 @@ export default function BooksPage() {
                       <p className="text-xs text-red-400 mt-0.5 line-clamp-2">{job.failedReason}</p>
                     )}
                   </div>
-                  <button className="shrink-0 text-text-secondary hover:text-red-500 transition-colors">
+                  <button
+                    className="shrink-0 text-text-secondary hover:text-red-500 transition-colors"
+                    onClick={() => {
+                      api.dismissBookJob(job.jobId).then(() => {
+                        queryClient.invalidateQueries({ queryKey: ['book-jobs'] })
+                      })
+                    }}
+                  >
                     <IconX size={18} />
                   </button>
                 </div>
