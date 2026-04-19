@@ -92,7 +92,7 @@ if [ ${#COMPOSE_SERVICES[@]} -gt 0 ]; then
   NOMAD_DIR="${NOMAD_DIR}" docker compose \
     -p project-nomad \
     -f "${NOMAD_DIR}/compose.yml" \
-    up -d --force-recreate --no-pull \
+    up -d --force-recreate --pull never \
     "${COMPOSE_SERVICES[@]}"
   ok "Services reloaded."
   echo ""
