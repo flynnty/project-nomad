@@ -203,7 +203,7 @@ def process_epub(book_dir: str, book_id: str) -> tuple:
     chapters = []
     for idref, _ in book.spine:
         item = book.get_item_with_id(idref)
-        if item is None or item.get_type() != ebooklib.ITEM_DOCUMENT:
+        if item is None:
             continue
         try:
             raw = item.get_content().decode('utf-8', errors='replace')
