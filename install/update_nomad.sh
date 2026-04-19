@@ -129,6 +129,19 @@ ensure_docker_compose_file_exists() {
   fi
 }
 
+pull_job_images() {
+  local job_images=(
+    "ghcr.io/flynnty/project-nomad-youtube-builder:latest"
+  )
+  for image in "${job_images[@]}"; do
+    echo -e "${YELLOW}#${RESET} Pulling job image: ${image}..."
+    if ! docker pull "${image}"; then
+      echo -e "${RED}#${RESET} Failed to pull ${image}. Please check your network connection and try again."
+      exit 1
+    fi
+  done
+}
+
 force_recreate() {
   echo -e "${YELLOW}#${RESET} Pulling the latest Docker images..."
   if ! docker compose -p project-nomad -f "${NOMAD_DIR}/compose.yml" pull; then
@@ -165,10 +178,28 @@ success_message() {
 #                                                                                                                                                                                                 #
 ###################################################################################################################################################################################################
 
+# Self-update: fetch the latest version of this script from GitHub and re-exec if it changed
+self_update() {
+  local url="https://raw.githubusercontent.com/flynnty/project-nomad/main/install/update_nomad.sh"
+  local tmp
+  tmp=$(mktemp)
+  if curl -fsSL "$url" -o "$tmp" 2>/dev/null; then
+    if ! diff -q "$tmp" "${BASH_SOURCE[0]}" > /dev/null 2>&1; then
+      echo -e "${YELLOW}#${RESET} Update script has changed — applying update and restarting...\\n"
+      cp "$tmp" "${BASH_SOURCE[0]}"
+      chmod +x "${BASH_SOURCE[0]}"
+      rm -f "$tmp"
+      exec bash "${BASH_SOURCE[0]}" "$@"
+    fi
+  fi
+  rm -f "$tmp"
+}
+
 # Pre-flight checks
 check_is_debian_based
 check_is_bash
 check_has_sudo
+self_update "$@"
 
 # Main update
 get_update_confirmation
@@ -176,5 +207,6 @@ ensure_docker_installed_and_running
 check_docker_compose
 ensure_docker_compose_file_exists
 force_recreate
+pull_job_images
 get_local_ip
 success_message

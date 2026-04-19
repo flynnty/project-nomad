@@ -8,12 +8,14 @@ import { useModals } from '~/context/ModalContext'
 import StyledModal from '~/components/StyledModal'
 import useServiceInstalledStatus from '~/hooks/useServiceInstalledStatus'
 import Alert from '~/components/Alert'
+import { useNotifications } from '~/context/NotificationContext'
 import { ZimFileWithMetadata } from '../../../../types/zim'
 import { SERVICE_NAMES } from '../../../../constants/service_names'
 
 export default function ZimPage() {
   const queryClient = useQueryClient()
   const { openModal, closeAllModals } = useModals()
+  const { addNotification } = useNotifications()
   const { isInstalled } = useServiceInstalledStatus(SERVICE_NAMES.KIWIX)
   const { data, isLoading } = useQuery<ZimFileWithMetadata[]>({
     queryKey: ['zim-files'],
@@ -24,6 +26,17 @@ export default function ZimPage() {
     const res = await api.listZimFiles()
     return res.data.files
   }
+
+  const rebuildMutation = useMutation({
+    mutationFn: () => api.rebuildZimLibrary(),
+    onSuccess: () => {
+      addNotification({ type: 'success', title: 'Library rebuilt', message: 'Kiwix library XML has been regenerated from disk.' })
+      queryClient.invalidateQueries({ queryKey: ['zim-files'] })
+    },
+    onError: () => {
+      addNotification({ type: 'error', title: 'Rebuild failed', message: 'Could not rebuild the library. Check server logs.' })
+    },
+  })
 
   async function confirmDeleteFile(file: ZimFileWithMetadata) {
     openModal(
@@ -66,6 +79,15 @@ export default function ZimPage() {
                 Manage your stored content files.
               </p>
             </div>
+            <StyledButton
+              variant="secondary"
+              icon="IconRefresh"
+              loading={rebuildMutation.isPending}
+              disabled={rebuildMutation.isPending}
+              onClick={() => rebuildMutation.mutate()}
+            >
+              Rebuild Library
+            </StyledButton>
           </div>
           {!isInstalled && (
             <Alert

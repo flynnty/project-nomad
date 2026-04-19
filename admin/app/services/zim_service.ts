@@ -14,7 +14,7 @@ import {
   ensureDirectoryExists,
   getFileStatsIfExists,
   listDirectoryContents,
-  ZIM_STORAGE_PATH,
+  ZIM_INDEX_PATH,
 } from '../utils/fs.js'
 import { join, resolve, sep } from 'path'
 import { WikipediaOption, WikipediaState } from '../../types/downloads.js'
@@ -35,11 +35,21 @@ const WIKIPEDIA_OPTIONS_URL = 'https://raw.githubusercontent.com/flynnty/project
 export class ZimService {
   constructor(private dockerService: DockerService) { }
 
-  async list() {
-    const dirPath = join(process.cwd(), ZIM_STORAGE_PATH)
-    await ensureDirectoryExists(dirPath)
+  async rebuild() {
+    const kiwixLibrary = new KiwixLibraryService()
+    await kiwixLibrary.rebuildFromDisk()
+  }
 
-    const all = await listDirectoryContents(dirPath)
+  async list() {
+    const indexPath = join(process.cwd(), ZIM_INDEX_PATH)
+    await ensureDirectoryExists(indexPath)
+
+    // Sync library XML with whatever is on disk so manually dropped ZIM files
+    // are picked up immediately without needing a separate action.
+    const kiwixLibrary = new KiwixLibraryService()
+    await kiwixLibrary.rebuildFromDisk()
+
+    const all = await listDirectoryContents(indexPath)
     const files = all.filter((item) => item.name.endsWith('.zim'))
 
     return {
@@ -155,7 +165,14 @@ export class ZimService {
       throw new Error('Could not determine filename from URL')
     }
 
-    const filepath = join(process.cwd(), ZIM_STORAGE_PATH, filename)
+    const filepath = join(process.cwd(), ZIM_INDEX_PATH, filename)
+
+    // Skip if the exact file is already on disk
+    const existingFile = await getFileStatsIfExists(filepath)
+    if (existingFile) {
+      logger.info(`[ZimService] ${filename} already exists on disk, skipping download`)
+      return { filename }
+    }
 
     // Parse resource metadata for the download job
     const parsedFilename = CollectionManifestService.parseZimFilename(filename)
@@ -212,10 +229,22 @@ export class ZimService {
 
     const allResources = CollectionManifestService.resolveTierResources(tier, category.tiers)
 
-    // Filter out already installed
+    // Filter out already installed (database) or already on disk (catches manual drops)
     const installed = await InstalledResource.query().where('resource_type', 'zim')
     const installedIds = new Set(installed.map((r) => r.resource_id))
-    const toDownload = allResources.filter((r) => !installedIds.has(r.id))
+
+    const zimDir = join(process.cwd(), ZIM_INDEX_PATH)
+    const diskFiles = await listDirectoryContents(zimDir)
+    const diskResourceIds = new Set(
+      diskFiles
+        .map((f) => CollectionManifestService.parseZimFilename(f.name))
+        .filter(Boolean)
+        .map((p) => p!.resource_id)
+    )
+
+    const toDownload = allResources.filter(
+      (r) => !installedIds.has(r.id) && !diskResourceIds.has(r.id)
+    )
 
     if (toDownload.length === 0) return null
 
@@ -232,7 +261,7 @@ export class ZimService {
       if (!filename) continue
 
       downloadFilenames.push(filename)
-      const filepath = join(process.cwd(), ZIM_STORAGE_PATH, filename)
+      const filepath = join(process.cwd(), ZIM_INDEX_PATH, filename)
 
       await RunDownloadJob.dispatch({
         url: resource.url,
@@ -329,7 +358,7 @@ export class ZimService {
       const parsed = CollectionManifestService.parseZimFilename(filename)
       if (!parsed) continue
 
-      const filepath = join(process.cwd(), ZIM_STORAGE_PATH, filename)
+      const filepath = join(process.cwd(), ZIM_INDEX_PATH, filename)
       const stats = await getFileStatsIfExists(filepath)
 
       try {
@@ -357,7 +386,7 @@ export class ZimService {
       fileName += '.zim'
     }
 
-    const basePath = resolve(join(process.cwd(), ZIM_STORAGE_PATH))
+    const basePath = resolve(join(process.cwd(), ZIM_INDEX_PATH))
     const fullPath = resolve(join(basePath, fileName))
 
     // Prevent path traversal — resolved path must stay within the storage directory
@@ -500,7 +529,7 @@ export class ZimService {
       throw new Error('Could not determine filename from URL')
     }
 
-    const filepath = join(process.cwd(), ZIM_STORAGE_PATH, filename)
+    const filepath = join(process.cwd(), ZIM_INDEX_PATH, filename)
 
     // Update or create selection record to show downloading status
     let selection: WikipediaSelection

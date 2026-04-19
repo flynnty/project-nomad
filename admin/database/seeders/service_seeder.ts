@@ -34,7 +34,7 @@ export default class ServiceSeeder extends BaseSeeder {
         },
         ExposedPorts: { '8080/tcp': {} },
       }),
-      ui_location: '8090',
+      ui_location: '8090/#lang=eng',
       installed: false,
       installation_status: 'idle',
       is_dependency_service: false,

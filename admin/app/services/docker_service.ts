@@ -5,7 +5,7 @@ import { inject } from '@adonisjs/core'
 import transmit from '@adonisjs/transmit/services/main'
 import { doResumableDownloadWithRetry } from '../utils/downloads.js'
 import { join } from 'path'
-import { ZIM_STORAGE_PATH } from '../utils/fs.js'
+import { ZIM_INDEX_PATH } from '../utils/fs.js'
 import { KiwixLibraryService } from './kiwix_library_service.js'
 import { SERVICE_NAMES } from '../../constants/service_names.js'
 import { exec } from 'child_process'
@@ -680,7 +680,7 @@ export class DockerService {
     const WIKIPEDIA_ZIM_URL =
       'https://github.com/flynnty/project-nomad/raw/refs/heads/main/install/wikipedia_en_100_mini_2026-01.zim'
     const filename = 'wikipedia_en_100_mini_2026-01.zim'
-    const filepath = join(process.cwd(), ZIM_STORAGE_PATH, filename)
+    const filepath = join(process.cwd(), ZIM_INDEX_PATH, filename)
     logger.info(`[DockerService] Kiwix Serve pre-install: Downloading ZIM file to ${filepath}`)
 
     this._broadcast(

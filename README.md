@@ -80,6 +80,135 @@ N.O.M.A.D. also includes built-in tools like a Wikipedia content selector, ZIM l
 | Notes | FlatNotes | Local note-taking with markdown support |
 | System Benchmark | Built-in | Hardware scoring, Builder Tags, and community leaderboard |
 
+## ZIM Content Management
+
+N.O.M.A.D. uses [Kiwix](https://kiwix.org/) to serve offline content packaged as `.zim` files. All ZIMs live in a single flat directory:
+
+```
+<install_path>/storage/zim/          ← all .zim files live here (flat, no subdirectories)
+<install_path>/storage/zim/kiwix-library.xml  ← auto-generated index read by kiwix-serve
+```
+
+The `kiwix-library.xml` is built by N.O.M.A.D. — you should never edit it by hand. Kiwix-serve reads it on startup and on every reload; it must be kept in sync with the ZIM files on disk.
+
+---
+
+### Manually Adding a ZIM
+
+You can add any `.zim` file from [library.kiwix.org](https://library.kiwix.org) or elsewhere by dropping it directly into the ZIM directory and then triggering a library rebuild.
+
+1. Copy the ZIM into the storage directory:
+   ```bash
+   sudo cp /path/to/your/download.zim /your/install/path/storage/zim/
+   ```
+2. Rebuild the library so Kiwix picks it up:
+
+   **Admin UI → Settings → Content Manager → Rebuild Library**
+
+3. Refresh `http://localhost:8090` — the new card will appear.
+
+> If you also want to set a category or tags on the ZIM, create a sidecar file first (see [Adding or Overriding Tags](#adding-or-overriding-tags-on-a-zim)), then rebuild.
+
+---
+
+### When to Run Rebuild Library
+
+Run **Rebuild Library** any time the ZIM directory changes outside of the normal admin download flow:
+
+| Situation | Why |
+|---|---|
+| You manually copied a ZIM into `storage/zim/` | Kiwix doesn't know about it yet |
+| You deleted a ZIM file directly from disk | The stale entry stays in the XML until you rebuild |
+| You created or edited a sidecar `.zim.json` file | Tag/category changes aren't picked up until rebuild |
+| Something looks out of sync on the Kiwix page | Full rescan from disk fixes it |
+
+Downloads and deletions triggered through the **Admin UI** rebuild the library automatically — you only need to run it manually when you've touched files on disk yourself.
+
+---
+
+### How Kiwix Displays Content
+
+Kiwix reads metadata from each ZIM file and writes it into `kiwix-library.xml`. Two fields control how cards look and filter:
+
+| Field | What it does |
+|---|---|
+| `tags` | Semicolon-separated list. Human-readable tags (not starting with `_`) appear as **badges** on cards. System tags like `_category:xxx` and `_videos:yes` are hidden from cards but used internally. |
+| `category` | Sets which **category filter** the card appears under in the top selector (e.g. `/#category=youtube`). |
+
+Tags and category should agree — e.g. if `category=youtube` then `tags` should contain `youtube;_category:youtube`.
+
+---
+
+### Adding or Overriding Tags on a ZIM
+
+ZIM files are read-only archives — you cannot edit them directly. Instead, place a sidecar JSON file alongside the ZIM with the same name plus `.json`. N.O.M.A.D. reads this file and merges it over the ZIM's built-in metadata when rebuilding the library.
+
+**File naming:** `<zimfilename>.zim.json`
+
+**Example — tag a third-party YouTube channel ZIM:**
+```bash
+cat > /your/install/path/storage/zim/lrnselfreliance_en_all_2025-12.zim.json << 'EOF'
+{
+  "tags": "youtube;_category:youtube",
+  "category": "youtube"
+}
+EOF
+```
+
+**Example — tag a devdocs ZIM:**
+```bash
+cat > /your/install/path/storage/zim/devdocs_en_all_2025-12.zim.json << 'EOF'
+{
+  "tags": "devdocs;_category:devdocs",
+  "category": "devdocs"
+}
+EOF
+```
+
+**Example — override the display title:**
+```bash
+cat > /your/install/path/storage/zim/wikipedia_en_all_mini_2025-12.zim.json << 'EOF'
+{
+  "title": "Wikipedia (Mini)"
+}
+EOF
+```
+
+Then rebuild the library: **Admin UI → Settings → Content Manager → Rebuild Library**
+
+---
+
+### All Overridable Fields
+
+Only these fields are read from the sidecar — `id` and `path` are always derived from the filename and cannot be overridden.
+
+| Field | Type | Example | Notes |
+|---|---|---|---|
+| `title` | string | `"Wikipedia (Mini)"` | Display name on the card |
+| `description` | string | `"Offline Wikipedia snapshot"` | Shown in card detail view |
+| `language` | string | `"eng"` | BCP 47 three-letter code |
+| `category` | string | `"youtube"` | Drives the category filter selector |
+| `creator` | string | `"Wikimedia"` | Original content creator |
+| `publisher` | string | `"openZIM"` | ZIM publisher |
+| `name` | string | `"wikipedia_en_all_mini"` | Machine-readable ZIM name |
+| `flavour` | string | `"mini"` | ZIM variant identifier |
+| `tags` | string | `"youtube;_category:youtube"` | Semicolon-separated; see tag notes below |
+| `date` | string | `"2025-12-01"` | Content date (YYYY-MM-DD) |
+
+**Tag conventions:**
+- Human-readable tags (no leading `_`) → visible badge on card: `youtube`, `devdocs`, `wikipedia`, `medicine`, etc.
+- `_category:xxx` → sets the category filter the card belongs to
+- `_videos:yes` → marks video content
+- Combine with semicolons: `"youtube;_category:youtube;_videos:yes"`
+
+---
+
+### YouTube Channel ZIMs
+
+YouTube channels downloaded through the N.O.M.A.D. admin are automatically tagged with `youtube;_category:youtube` and saved as `youtube_channel_<channel_id>.zim`. These appear in the Kiwix library under the `youtube` category and display a `youtube` badge on their cards.
+
+To filter to only YouTube content on the Kiwix main page: `http://localhost:8090/#category=youtube`
+
 ## Device Requirements
 While many similar offline survival computers are designed to be run on bare-minimum, lightweight hardware, Project N.O.M.A.D. is quite the opposite. To install and run the
 available AI tools, we highly encourage the use of a beefy, GPU-backed device to make the most of your install.

@@ -19,6 +19,7 @@ import SettingsController from '#controllers/settings_controller'
 import SystemController from '#controllers/system_controller'
 import CollectionUpdatesController from '#controllers/collection_updates_controller'
 import ZimController from '#controllers/zim_controller'
+import YoutubeController from '#controllers/youtube_controller'
 import router from '@adonisjs/core/services/router'
 import transmit from '@adonisjs/transmit/services/main'
 
@@ -173,6 +174,7 @@ router
     router.get('/list', [ZimController, 'list'])
     router.get('/list-remote', [ZimController, 'listRemote'])
     router.get('/curated-categories', [ZimController, 'listCuratedCategories'])
+    router.post('/rebuild', [ZimController, 'rebuild'])
     router.post('/download-remote', [ZimController, 'downloadRemote'])
     router.post('/download-category-tier', [ZimController, 'downloadCategoryTier'])
 
@@ -181,6 +183,17 @@ router
     router.delete('/:filename', [ZimController, 'delete'])
   })
   .prefix('/api/zim')
+
+router.get('/youtube', [YoutubeController, 'index'])
+router
+  .group(() => {
+    router.post('/download', [YoutubeController, 'download'])
+    router.get('/list', [YoutubeController, 'list'])
+    router.get('/jobs', [YoutubeController, 'listJobs'])
+    router.post('/jobs/:jobId/cancel', [YoutubeController, 'cancelJob'])
+    router.delete('/:type/:id', [YoutubeController, 'delete'])
+  })
+  .prefix('/api/youtube')
 
 router
   .group(() => {

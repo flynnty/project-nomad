@@ -637,6 +637,13 @@ class API {
     })()
   }
 
+  async rebuildZimLibrary() {
+    return catchInternal(async () => {
+      const response = await this.client.post<{ message: string }>('/zim/rebuild')
+      return response.data
+    })()
+  }
+
   async listDownloadJobs(filetype?: string): Promise<DownloadJobWithProgress[] | undefined> {
     return catchInternal(async () => {
       const endpoint = filetype ? `/downloads/jobs/${filetype}` : '/downloads/jobs'
@@ -786,6 +793,62 @@ class API {
       return response.data
     })()
   }
+
+  // YouTube content methods
+
+  async downloadYoutubeContent(url: string) {
+    return catchInternal(async () => {
+      const response = await this.client.post<{ message: string; jobId: string; url: string }>(
+        '/youtube/download',
+        { url }
+      )
+      return response.data
+    })()
+  }
+
+  async listYoutubeContent() {
+    return catchInternal(async () => {
+      const response = await this.client.get<{
+        channels: { id: string; name: string; description: string; videoCount: number }[]
+        videos: { id: string; title: string; channel: string; duration: string; uploadDate: string }[]
+      }>('/youtube/list')
+      return response.data
+    })()
+  }
+
+  async listYoutubeJobs() {
+    return catchInternal(async () => {
+      const response = await this.client.get<
+        {
+          jobId: string
+          url: string
+          percent: number
+          message: string
+          lastProgressTime?: number
+          status: 'waiting' | 'active' | 'delayed' | 'failed'
+          failedReason?: string
+        }[]
+      >('/youtube/jobs')
+      return response.data
+    })()
+  }
+
+  async cancelYoutubeJob(jobId: string) {
+    return catchInternal(async () => {
+      const response = await this.client.post<{ success: boolean; message: string }>(
+        `/youtube/jobs/${jobId}/cancel`
+      )
+      return response.data
+    })()
+  }
+
+  async deleteYoutubeItem(type: 'channel' | 'video', id: string) {
+    return catchInternal(async () => {
+      const response = await this.client.delete<{ message: string }>(`/youtube/${type}/${id}`)
+      return response.data
+    })()
+  }
+
 }
 
 export default new API()

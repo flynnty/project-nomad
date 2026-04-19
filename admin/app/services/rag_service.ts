@@ -4,7 +4,7 @@ import { inject } from '@adonisjs/core'
 import logger from '@adonisjs/core/services/logger'
 import { TokenChunker } from '@chonkiejs/core'
 import sharp from 'sharp'
-import { deleteFileIfExists, determineFileType, getFile, getFileStatsIfExists, listDirectoryContentsRecursive, ZIM_STORAGE_PATH } from '../utils/fs.js'
+import { deleteFileIfExists, determineFileType, getFile, getFileStatsIfExists, listDirectoryContentsRecursive, ZIM_INDEX_PATH, ZIM_STORAGE_PATH } from '../utils/fs.js'
 import { PDFParse } from 'pdf-parse'
 import { createWorker } from 'tesseract.js'
 import { fromBuffer } from 'pdf2pic'
@@ -1166,7 +1166,7 @@ export class RagService {
       logger.info('[RAG] Starting knowledge base sync scan')
 
       const KB_UPLOADS_PATH = join(process.cwd(), RagService.UPLOADS_STORAGE_PATH)
-      const ZIM_PATH = join(process.cwd(), ZIM_STORAGE_PATH)
+      const ZIM_PATH = join(process.cwd(), ZIM_INDEX_PATH)
 
       const filesInStorage: string[] = []
 

@@ -10,7 +10,7 @@ import {
   ensureDirectoryExists,
   listDirectoryContents,
   getFileStatsIfExists,
-  ZIM_STORAGE_PATH,
+  ZIM_INDEX_PATH,
 } from '../utils/fs.js'
 import type {
   ManifestType,
@@ -196,7 +196,7 @@ export class CollectionManifestService {
 
     // Reconcile ZIM files
     try {
-      const zimDir = join(process.cwd(), ZIM_STORAGE_PATH)
+      const zimDir = join(process.cwd(), ZIM_INDEX_PATH)
       await ensureDirectoryExists(zimDir)
       const zimItems = await listDirectoryContents(zimDir)
       const zimFiles = zimItems.filter((f) => f.name.endsWith('.zim'))

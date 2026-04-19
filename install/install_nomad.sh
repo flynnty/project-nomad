@@ -521,6 +521,19 @@ start_management_containers() {
   echo -e "${GREEN}#${RESET} Management containers started successfully.\\n"
 }
 
+pull_job_images() {
+  local job_images=(
+    "ghcr.io/flynnty/project-nomad-youtube-builder:latest"
+  )
+  for image in "${job_images[@]}"; do
+    echo -e "${YELLOW}#${RESET} Pulling job image: ${image}..."
+    if ! docker pull "${image}"; then
+      echo -e "${RED}#${RESET} Failed to pull ${image}. Please check your network connection and try again."
+      exit 1
+    fi
+  done
+}
+
 get_local_ip() {
   local_ip_address=$(hostname -I | awk '{print $1}')
   if [[ -z "$local_ip_address" ]]; then
@@ -614,6 +627,7 @@ create_nomad_directory
 download_helper_scripts
 download_management_compose_file
 start_management_containers
+pull_job_images
 verify_gpu_setup
 success_message
 

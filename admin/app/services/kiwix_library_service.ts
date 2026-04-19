@@ -1,8 +1,9 @@
 import { XMLBuilder, XMLParser } from 'fast-xml-parser'
 import { readFile, writeFile, rename, readdir } from 'fs/promises'
+import type { Dirent } from 'fs'
 import { join } from 'path'
 import { Archive } from '@openzim/libzim'
-import { KIWIX_LIBRARY_XML_PATH, ZIM_STORAGE_PATH, ensureDirectoryExists } from '../utils/fs.js'
+import { KIWIX_LIBRARY_XML_PATH, ZIM_INDEX_PATH, ensureDirectoryExists } from '../utils/fs.js'
 import logger from '@adonisjs/core/services/logger'
 import { randomUUID } from 'node:crypto'
 
@@ -15,6 +16,7 @@ interface KiwixBook {
   title: string
   description?: string
   language?: string
+  category?: string
   creator?: string
   publisher?: string
   name?: string
@@ -84,16 +86,24 @@ export class KiwixLibraryService {
       const rawFilesize =
         typeof archive.filesize === 'bigint' ? Number(archive.filesize) : archive.filesize
 
+      const tags = getMeta('Tags')
+      const categoryMatch = tags?.match(/_category:([\w-]+)/)
+      // If no _category: tag, fall back to first human-readable tag (e.g. devdocs, preppers, medicine)
+      const category = categoryMatch
+        ? categoryMatch[1]
+        : tags?.split(';').find((t) => t.trim() && !t.startsWith('_') && t.trim() !== 'youtube')?.trim()
+
       return {
         id: archive.uuid || undefined,
         title: getMeta('Title'),
         description: getMeta('Description'),
         language: getMeta('Language'),
+        category,
         creator: getMeta('Creator'),
         publisher: getMeta('Publisher'),
         name: getMeta('Name'),
         flavour: getMeta('Flavour'),
-        tags: getMeta('Tags'),
+        tags,
         date: getMeta('Date'),
         articleCount: archive.articleCount,
         mediaCount: archive.mediaCount,
@@ -103,6 +113,34 @@ export class KiwixLibraryService {
       }
     } catch {
       return null
+    }
+  }
+
+  /**
+   * Reads a sidecar JSON file (<zimFilePath>.json) and returns any metadata fields it contains.
+   * This is the way to override or add tags/category/title for any ZIM without modifying
+   * the (read-only) ZIM file itself.
+   *
+   * Example sidecar at wikipedia_en_all_2025-12.zim.json:
+   *   {"category":"wikipedia","tags":"wikipedia;_category:wikipedia"}
+   *
+   * Returns {} if no sidecar file exists.
+   */
+  private async _readSidecarMetadata(zimFilePath: string): Promise<Partial<KiwixBook>> {
+    try {
+      const content = await readFile(`${zimFilePath}.json`, 'utf-8')
+      const data = JSON.parse(content)
+      const allowed: (keyof KiwixBook)[] = [
+        'title', 'description', 'language', 'category', 'creator',
+        'publisher', 'name', 'flavour', 'tags', 'date',
+      ]
+      const result: Partial<KiwixBook> = {}
+      for (const key of allowed) {
+        if (data[key] !== undefined) result[key] = data[key] as any
+      }
+      return result
+    } catch {
+      return {}
     }
   }
 
@@ -124,6 +162,7 @@ export class KiwixLibraryService {
             '@_title': b.title,
             ...(b.description !== undefined && { '@_description': b.description }),
             ...(b.language !== undefined && { '@_language': b.language }),
+            ...(b.category !== undefined && { '@_category': b.category }),
             ...(b.creator !== undefined && { '@_creator': b.creator }),
             ...(b.publisher !== undefined && { '@_publisher': b.publisher }),
             ...(b.name !== undefined && { '@_name': b.name }),
@@ -167,6 +206,7 @@ export class KiwixLibraryService {
         title: b['@_title'] ?? '',
         description: b['@_description'],
         language: b['@_language'],
+        category: b['@_category'],
         creator: b['@_creator'],
         publisher: b['@_publisher'],
         name: b['@_name'],
@@ -183,31 +223,32 @@ export class KiwixLibraryService {
       .filter((b) => b.id && b.path)
   }
 
-  async rebuildFromDisk(opts?: { excludeFilenames?: string[] }): Promise<void> {
-    const dirPath = join(process.cwd(), ZIM_STORAGE_PATH)
-    await ensureDirectoryExists(dirPath)
+  async rebuildFromDisk(): Promise<void> {
+    const indexPath = join(process.cwd(), ZIM_INDEX_PATH)
+    await ensureDirectoryExists(indexPath)
 
-    let entries: string[] = []
+    const books: KiwixBook[] = []
+
+    let entries: Dirent<string>[] = []
     try {
-      entries = await readdir(dirPath)
+      entries = await readdir(indexPath, { withFileTypes: true })
     } catch {
       entries = []
     }
 
-    const excludeSet = new Set(opts?.excludeFilenames ?? [])
-    const zimFiles = entries.filter((name) => name.endsWith('.zim') && !excludeSet.has(name))
-
-    const books: KiwixBook[] = zimFiles.map((filename) => {
-      const meta = this._readZimMetadata(join(dirPath, filename))
-      const containerPath = `${CONTAINER_DATA_PATH}/${filename}`
-      return {
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.zim')) continue
+      const fullPath = join(indexPath, entry.name)
+      const meta = this._readZimMetadata(fullPath)
+      const sidecar = await this._readSidecarMetadata(fullPath)
+      books.push({
         ...meta,
-        // Override fields that must be derived locally, not from ZIM metadata
-        id: meta?.id ?? filename.slice(0, -4),
-        path: containerPath,
-        title: meta?.title ?? this._filenameToTitle(filename),
-      }
-    })
+        ...sidecar,
+        id: meta?.id ?? entry.name.slice(0, -4),
+        path: `${CONTAINER_DATA_PATH}/${entry.name}`,
+        title: sidecar.title ?? meta?.title ?? this._filenameToTitle(entry.name),
+      })
+    }
 
     const xml = this._buildXml(books)
     await this._atomicWrite(xml)
@@ -238,14 +279,16 @@ export class KiwixLibraryService {
       return
     }
 
-    const fullPath = join(process.cwd(), ZIM_STORAGE_PATH, zimFilename)
+    const fullPath = join(process.cwd(), ZIM_INDEX_PATH, zimFilename)
     const meta = this._readZimMetadata(fullPath)
+    const sidecar = await this._readSidecarMetadata(fullPath)
 
     existingBooks.push({
       ...meta,
+      ...sidecar,
       id: meta?.id ?? zimFilename.slice(0, -4),
       path: containerPath,
-      title: meta?.title ?? this._filenameToTitle(zimFilename),
+      title: sidecar.title ?? meta?.title ?? this._filenameToTitle(zimFilename),
     })
 
     const xml = this._buildXml(existingBooks)

@@ -3,7 +3,7 @@ import env from '#start/env'
 import axios from 'axios'
 import InstalledResource from '#models/installed_resource'
 import { RunDownloadJob } from '../jobs/run_download_job.js'
-import { ZIM_STORAGE_PATH } from '../utils/fs.js'
+import { ZIM_INDEX_PATH } from '../utils/fs.js'
 import { join } from 'path'
 import type {
   ResourceUpdateCheckRequest,
@@ -150,7 +150,7 @@ export class CollectionUpdateService {
 
   private buildFilepath(update: ResourceUpdateInfo, filename: string): string {
     if (update.resource_type === 'zim') {
-      return join(process.cwd(), ZIM_STORAGE_PATH, filename)
+      return join(process.cwd(), ZIM_INDEX_PATH, filename)
     }
     return join(process.cwd(), MAP_STORAGE_PATH, 'pmtiles', filename)
   }

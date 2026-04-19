@@ -75,6 +75,11 @@ export default class ZimController {
     }
   }
 
+  async rebuild({}: HttpContext) {
+    await this.zimService.rebuild()
+    return { message: 'Library rebuilt.' }
+  }
+
   // Wikipedia selector endpoints
 
   async getWikipediaState({}: HttpContext) {
