@@ -857,7 +857,8 @@ class API {
       form.append('file', file)
       const response = await this.client.post<{ message: string; bookId: string }>(
         '/books/upload',
-        form
+        form,
+        { headers: { 'Content-Type': undefined } }
       )
       return response.data
     })()
