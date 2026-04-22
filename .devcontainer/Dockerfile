@@ -35,6 +35,16 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get update && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
+# Docker CLI — allows Claude to build images and hot-swap containers via the
+# host Docker socket mounted at /var/run/docker.sock (Docker-outside-of-Docker).
+# Only the CLI is installed; the daemon runs on the host.
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+      -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu noble stable" \
+      > /etc/apt/sources.list.d/docker.list \
+    && apt-get update && apt-get install -y --no-install-recommends docker-ce-cli \
+    && rm -rf /var/lib/apt/lists/*
+
 # Node.js 22 from NodeSource (matches the production admin image `node:22-slim`).
 # The Ubuntu 24.04 default nodejs package is 18.x, too old for AdonisJS 6 /
 # Vite 6 / TypeScript 5.8 — build fails with NodeNext resolution and ES2022

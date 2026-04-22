@@ -12,14 +12,31 @@ set -e
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Locate the running installation by finding the compose.yml
-if [ -f "/media/user/Spinny/project-nomad/compose.yml" ]; then
-  NOMAD_DIR="/media/user/Spinny/project-nomad"
+# Locate the running installation by finding the compose.yml.
+# NOMAD_DIR may be provided as an environment variable; otherwise we probe common paths
+# and then ask Docker itself.
+if [ -n "${NOMAD_DIR}" ] && [ -f "${NOMAD_DIR}/compose.yml" ]; then
+  : # use NOMAD_DIR as-is
 elif [ -f "${REPO_DIR}/compose.yml" ]; then
   NOMAD_DIR="${REPO_DIR}"
+elif [ -f "/opt/project-nomad/compose.yml" ]; then
+  NOMAD_DIR="/opt/project-nomad"
+elif [ -f "/media/user/Spinny/project-nomad/compose.yml" ]; then
+  NOMAD_DIR="/media/user/Spinny/project-nomad"
 else
-  echo "ERROR: Could not find compose.yml. Is Project N.O.M.A.D. installed?"
-  exit 1
+  # Ask docker compose which projects are running and find the project-nomad one
+  COMPOSE_FILE=$(docker compose ls --format json 2>/dev/null \
+    | python3 -c "import sys,json; projects=[p for p in json.load(sys.stdin) if 'nomad' in p.get('Name','').lower() or 'nomad' in p.get('ConfigFiles','').lower()]; print(projects[0]['ConfigFiles'].split(',')[0] if projects else '')" 2>/dev/null || true)
+  if [ -n "${COMPOSE_FILE}" ] && [ -f "${COMPOSE_FILE}" ]; then
+    NOMAD_DIR="$(dirname "${COMPOSE_FILE}")"
+  else
+    echo "ERROR: Could not find compose.yml. Set NOMAD_DIR to your install path, e.g.:"
+    echo "  NOMAD_DIR=/path/to/project-nomad bash install/dev_build_local.sh admin"
+    echo ""
+    echo "Running compose projects:"
+    docker compose ls 2>/dev/null || true
+    exit 1
+  fi
 fi
 
 GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; RESET='\033[0m'
