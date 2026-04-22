@@ -156,20 +156,42 @@ export class BookLibraryJob {
     const queueService = new QueueService()
     const queue = queueService.getQueue(this.queue)
 
+    const jobOpts = {
+      jobId: JOB_ID,
+      attempts: 2,
+      backoff: { type: 'exponential', delay: 10000 },
+      removeOnComplete: true,
+    }
+
     try {
-      const job = await queue.add(this.key, {}, {
-        jobId: JOB_ID,
-        attempts: 2,
-        backoff: { type: 'exponential', delay: 10000 },
-        removeOnComplete: true,
-      })
+      const job = await queue.add(this.key, {}, jobOpts)
       return { job, created: true }
     } catch (error: any) {
-      if (error.message.includes('job already exists')) {
+      if (error.message?.includes('job already exists')) {
         const existing = await queue.getJob(JOB_ID)
         return { job: existing, created: false }
       }
-      throw error
+      // Queue state may be corrupt (e.g. WRONGTYPE on a Redis key from a prior run).
+      // Delete all queue-related keys and retry on a clean slate.
+      logger.warn('[BookLibraryJob] Queue add failed, attempting queue recovery:', error)
+      const client = await queue.client
+      const prefix = `bull:${this.queue}:`
+      await client.del(
+        `${prefix}wait`,
+        `${prefix}paused`,
+        `${prefix}meta`,
+        `${prefix}id`,
+        `${prefix}completed`,
+        `${prefix}delayed`,
+        `${prefix}active`,
+        `${prefix}events`,
+        `${prefix}marker`,
+        `${prefix}stalled`,
+        `${prefix}stalled-check`,
+        `${prefix}${JOB_ID}`
+      )
+      const job = await queue.add(this.key, {}, jobOpts)
+      return { job, created: true }
     }
   }
 
