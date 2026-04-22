@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(curl -s \"http://localhost:8090/catalog/v2/entries?category=youtube\")",
-      "Bash(python3 -c ' *)"
-    ]
-  }
-}

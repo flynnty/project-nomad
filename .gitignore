@@ -2,6 +2,15 @@
 logs
 *.log
 
+# Claude Code config — local only, not committed
+claude/
+.claude
+CLAUDE.md
+
+# Scratch / test files dropped during local validation
+resources/
+
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

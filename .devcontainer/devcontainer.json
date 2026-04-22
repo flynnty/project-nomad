@@ -1,0 +1,55 @@
+{
+    "name": "claude_kitt",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "user",
+    "updateRemoteUserUID": true,
+    "forwardPorts": [],
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/home/user/.ssh,type=bind",
+        "source=${localEnv:HOME}/.gitconfig,target=/home/user/.gitconfig,type=bind",
+        "source=${localEnv:HOME}/.claude/.credentials.json,target=/home/user/.claude/.credentials.json,type=bind"
+    ],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "editor.defaultFormatter": "xaver.clang-format",
+                "clang-format.assumeFilename": "/workspace/.clang-format",
+                "editor.formatOnSave": true,
+                "editor.rulers": [120],
+                "terminal.integrated.scrollback": 100000,
+                "explorer.compactFolders": false,
+                "files.trimTrailingWhitespace": true,
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "extensions.ignoreRecommendations": true,
+                "files.exclude": {
+                    "**/.git": true,
+                    "**/.svn": true,
+                    "**/.hg": true,
+                    "**/CVS": true,
+                    "**/.DS_Store": true,
+                    "**/Thumbs.db": true,
+                    "**/.west": true
+                },
+                "workbench.editorAssociations": {
+                    "*.md": "default"
+                }
+            },
+            "extensions": [
+                "mcu-debug.debug-tracker-vscode",
+                "ms-vscode.embedded-tools",
+                "ms-vscode.cpptools",
+                "awsxxf.serialterminal",
+                "cschlosser.doxdocgen",
+                "streetsidesoftware.code-spell-checker",
+                "mhutchie.git-graph",
+                "eamodio.gitlens",
+                "mechatroner.rainbow-csv",
+                "ms-vscode.vscode-serial-monitor",
+                "xaver.clang-format",
+                "anthropic.claude-code"
+            ]
+        }
+    }
+}
