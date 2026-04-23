@@ -46,6 +46,18 @@ export class BookService {
     return books
   }
 
+  async findByContentHash(hash: string): Promise<string | null> {
+    const booksRawPath = join(process.cwd(), BOOKS_RAW_PATH)
+    const bookIds = await listSubdirs(booksRawPath)
+    for (const id of bookIds) {
+      const info = await readJsonSafe(join(booksRawPath, id, 'info.json'))
+      if (info.content_hash === hash) {
+        return id
+      }
+    }
+    return null
+  }
+
   async delete(id: string): Promise<void> {
     if (!id || !/^[\w-]+$/.test(id)) {
       throw new Error('invalid_id')

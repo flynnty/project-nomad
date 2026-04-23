@@ -102,8 +102,8 @@ export default function BooksPage() {
         queryClient.invalidateQueries({ queryKey: ['book-list'] })
       }
     },
-    onError: () => {
-      setFileError('Upload failed. Please try again.')
+    onError: (error: Error) => {
+      setFileError(error.message || 'Upload failed. Please try again.')
     },
   })
 

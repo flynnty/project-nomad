@@ -2,13 +2,22 @@ import { inject } from '@adonisjs/core'
 import type { HttpContext } from '@adonisjs/core/http'
 import { BookService } from '#services/book_service'
 import { BookLibraryJob } from '#jobs/book_library_job'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { BOOKS_RAW_PATH } from '../utils/fs.js'
 
 const ALLOWED_EXTS = ['epub', 'pdf']
 const MAX_FILE_SIZE = '500mb'
+
+async function hashFile(filePath: string): Promise<string> {
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(filePath)) {
+    hash.update(chunk)
+  }
+  return hash.digest('hex')
+}
 
 @inject()
 export default class BookController {
@@ -35,6 +44,13 @@ export default class BookController {
         message: file.errors.map((e) => e.message).join('; '),
       })
     }
+
+    const contentHash = await hashFile(file.tmpPath!)
+    const duplicate = await this.bookService.findByContentHash(contentHash)
+    if (duplicate) {
+      return response.status(409).json({ message: 'This book is already in your library.' })
+    }
+
     const mimeType = ext === 'pdf' ? 'application/pdf' : 'application/epub+zip'
 
     // Strip extension and sanitize for a human-readable title seed
@@ -58,6 +74,7 @@ export default class BookController {
       publisher: '',
       date: '',
       mime_type: mimeType,
+      content_hash: contentHash,
     }
     await writeFile(join(bookDir, 'info.json'), JSON.stringify(info, null, 2))
 

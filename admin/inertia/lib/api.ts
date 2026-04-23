@@ -852,16 +852,21 @@ class API {
   // Book library methods
 
   async uploadBook(file: File) {
-    return catchInternal(async () => {
-      const form = new FormData()
-      form.append('file', file)
+    const form = new FormData()
+    form.append('file', file)
+    try {
       const response = await this.client.post<{ message: string; bookId: string }>(
         '/books/upload',
         form,
         { headers: { 'Content-Type': undefined } }
       )
       return response.data
-    })()
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.data?.message) {
+        throw new Error(error.response.data.message)
+      }
+      throw error
+    }
   }
 
   async listBooks() {
