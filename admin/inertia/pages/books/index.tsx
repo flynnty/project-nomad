@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react'
+import { Head, usePage } from '@inertiajs/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import AppLayout from '~/layouts/AppLayout'
@@ -18,8 +18,9 @@ import {
 const KIWIX_PORT = 8090
 const POLL_INTERVAL_MS = 3000
 
-function getMyLibraryUrl(): string {
-  return `http://${window.location.hostname}:${KIWIX_PORT}/viewer#my_book_library/index.html`
+function getMyLibraryUrl(serverHost?: string): string {
+  const host = serverHost || window.location.hostname
+  return `http://${host}:${KIWIX_PORT}/viewer#my_book_library/index.html`
 }
 
 type JobStatus = 'waiting' | 'active' | 'delayed' | 'failed'
@@ -57,6 +58,7 @@ function BookTypeLabel({ mimeType }: { mimeType: string }) {
 }
 
 export default function BooksPage() {
+  const { serverHost } = usePage<{ serverHost?: string }>().props
   const [fileError, setFileError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { addNotification } = useNotifications()
@@ -260,7 +262,7 @@ export default function BooksPage() {
             </h2>
             {books.length > 0 && (
               <a
-                href={getMyLibraryUrl()}
+                href={getMyLibraryUrl(serverHost)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-sm text-desert-green hover:underline"
