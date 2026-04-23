@@ -255,14 +255,14 @@ def build_library_zim(raw_dir: str, zim_dir: str, env: Environment):
     os.makedirs(zim_dir, exist_ok=True)
 
     creator = Creator(zim_path)
-    creator.config_indexing(True, 'mul')
+    creator.config_indexing(True, 'eng')
     creator.set_mainpath('index.html')
 
     with creator:
         creator.add_metadata('Name', 'my_book_library')
         creator.add_metadata('Title', 'My Book Library')
         creator.add_metadata('Description', 'Personal book library')
-        creator.add_metadata('Language', 'mul')
+        creator.add_metadata('Language', 'eng')
         creator.add_metadata('Tags', 'books;_category:books')
         creator.add_metadata('Creator', 'Project N.O.M.A.D.')
         creator.add_metadata('Publisher', 'Project N.O.M.A.D.')
