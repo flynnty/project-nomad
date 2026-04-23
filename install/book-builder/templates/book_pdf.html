@@ -69,15 +69,6 @@
       }
     });
 
-    // Give the iframe a moment, then check if it's blank (Chrome PDF block).
-    setTimeout(function () {
-      try {
-        if (frame.contentDocument && frame.contentDocument.body &&
-            frame.contentDocument.body.childElementCount === 0) {
-          showFallback();
-        }
-      } catch (e) { /* cross-origin, probably loaded fine */ }
-    }, 5000);
 
     function showFallback() {
       document.getElementById('pdf-frame').style.display = 'none';
