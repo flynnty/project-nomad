@@ -134,7 +134,7 @@ def process_epub(book_dir: str, book_id: str) -> tuple:
         except Exception:
             return ''
 
-    title = get_meta('title') or book_id
+    title = get_meta('title') or ''
     author = get_meta('creator') or 'Unknown'
     description = get_meta('description') or ''
     publisher = get_meta('publisher') or ''
@@ -275,7 +275,7 @@ def build_library_zim(raw_dir: str, zim_dir: str, env: Environment):
             with open(os.path.join(book_dir, 'info.json')) as f:
                 info = json.load(f)
 
-            title = info.get('title', book_id)
+            title = info.get('title') or book_id
             author = info.get('author', 'Unknown')
             description = info.get('description', '')
 
@@ -288,11 +288,20 @@ def build_library_zim(raw_dir: str, zim_dir: str, env: Environment):
             if has_epub:
                 try:
                     new_info, chapters, image_items, cover_data, cover_mime = process_epub(book_dir, book_id)
-                    # Update metadata from epub
-                    if new_info['title']: title = new_info['title']
-                    if new_info['author']: author = new_info['author']
-                    if new_info['description']: description = new_info['description']
-                    info.update(new_info)
+                    # Update metadata from epub only if epub provides a real (non-empty) value.
+                    # Never let info.update() clobber a previously-saved title with an empty string.
+                    if new_info.get('title'):
+                        title = new_info['title']
+                        info['title'] = new_info['title']
+                    if new_info.get('author'):
+                        author = new_info['author']
+                        info['author'] = new_info['author']
+                    if new_info.get('description'):
+                        description = new_info['description']
+                        info['description'] = new_info['description']
+                    if new_info.get('publisher'): info['publisher'] = new_info['publisher']
+                    if new_info.get('date'): info['date'] = new_info['date']
+                    info['mime_type'] = new_info['mime_type']
                     with open(os.path.join(book_dir, 'info.json'), 'w') as f:
                         json.dump(info, f, indent=2)
 
@@ -313,8 +322,8 @@ def build_library_zim(raw_dir: str, zim_dir: str, env: Environment):
                             chapter_title=ch['title'], content=ch['content'],
                             book_id=book_id, chapter_index=ch['index'],
                             total_chapters=len(chapters),
-                            prev_url=f"../{ch['index'] - 1}.html" if ch['index'] > 0 else None,
-                            next_url=f"../{ch['index'] + 1}.html" if ch['index'] < len(chapters) - 1 else None,
+                            prev_url=f"{ch['index'] - 1}.html" if ch['index'] > 0 else None,
+                            next_url=f"{ch['index'] + 1}.html" if ch['index'] < len(chapters) - 1 else None,
                             toc_url='../index.html',
                         )
                         creator.add_item(HtmlItem(ch['path'], ch['title'], html))
