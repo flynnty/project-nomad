@@ -194,9 +194,19 @@ def process_epub(book_dir: str, book_id: str) -> tuple:
             lambda m: f'{m.group(1)}="{resolve(m.group(2))}"',
             html_str,
         )
-        # Strip external stylesheet links
+        # Strip external stylesheet links and inline <style> blocks so epub
+        # colors don't bleed through into the dark reader theme.
         html_str = re.sub(r'<link[^>]+rel=["\']stylesheet["\'][^>]*/>', '', html_str, flags=re.IGNORECASE)
         html_str = re.sub(r'<link[^>]+stylesheet[^>]*>', '', html_str, flags=re.IGNORECASE)
+        html_str = re.sub(r'<style\b[^>]*>.*?</style>', '', html_str, flags=re.DOTALL | re.IGNORECASE)
+
+        # Strip color/background-color from inline style attributes; keep layout props.
+        def _strip_colors(m: re.Match) -> str:
+            props = [p.strip() for p in m.group(1).split(';') if p.strip()]
+            kept = [p for p in props if not re.match(r'(color|background(-color)?)\s*:', p, re.I)]
+            return f'style="{"; ".join(kept)}"' if kept else ''
+
+        html_str = re.sub(r'style=["\']([^"\']*)["\']', _strip_colors, html_str)
         return html_str
 
     # Extract chapters from spine
