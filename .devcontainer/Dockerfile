@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Keep this list in sync with the "Pre-installed tools" section of CLAUDE.md.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       curl \
+      gnupg \
       git \
       vim \
       ca-certificates \
@@ -39,7 +40,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 # host Docker socket mounted at /var/run/docker.sock (Docker-outside-of-Docker).
 # Only the CLI is installed; the daemon runs on the host.
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-      -o /usr/share/keyrings/docker-archive-keyring.gpg \
+      | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu noble stable" \
       > /etc/apt/sources.list.d/docker.list \
     && apt-get update && apt-get install -y --no-install-recommends docker-ce-cli \
